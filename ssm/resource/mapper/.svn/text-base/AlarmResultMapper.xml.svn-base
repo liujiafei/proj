@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="richinfo.mm.monitor.web.dao.AlarmResultMapper" >
+  <resultMap id="BaseResultMap" type="richinfo.mm.monitor.web.enties.AlarmResult" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="pcName" property="pcName" jdbcType="VARCHAR" />
+    <result column="url_Pattern" property="url_Pattern" jdbcType="VARCHAR" />
+    <result column="itName" property="itName" jdbcType="VARCHAR" />
+    <result column="compare_Oper" property="compare_Oper" jdbcType="INTEGER" />
+    <result column="alarm_Threshold" property="alarm_Threshold" jdbcType="DOUBLE" />
+    <result column="alarm_Condition" property="alarm_Condition" jdbcType="VARCHAR" />
+    <result column="reason" property="reason" jdbcType="VARCHAR" />
+    <result column="deal_Status" property="deal_Status" jdbcType="INTEGER" />
+    <result column="alarm_Status" property="alarm_Status" jdbcType="INTEGER" />
+    <result column="last_State_Change" property="last_State_Change" jdbcType="TIMESTAMP" />
+    <result column="last_Update" property="last_Update" jdbcType="TIMESTAMP" />
+    <result column="error_Nums" property="error_Nums" jdbcType="INTEGER" />
+    <result column="send_SMS_Nums" property="send_SMS_Nums" jdbcType="INTEGER" />
+    <result column="send_Mail_Nums" property="send_Mail_Nums" jdbcType="INTEGER" />
+    
+    <result column="page_Conf_Id" property="page_Conf_Id" jdbcType="INTEGER" />
+    <result column="index_Id" property="index_Id" jdbcType="INTEGER" />
+    <result column="ignore_Time" property="ignore_Time" jdbcType="TIMESTAMP" />
+    <result column="pause_Time" property="pause_Time" jdbcType="TIMESTAMP" />
+    <result column="notice_Id" property="notice_Id" jdbcType="INTEGER" />
+  </resultMap>
+  <resultMap id="AlarmHistoryMap" type="richinfo.mm.monitor.web.enties.AlarmHistory" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="pcName" property="pcName" jdbcType="VARCHAR" />
+    <result column="url_Pattern" property="url_Pattern" jdbcType="VARCHAR" />
+    <result column="itName" property="itName" jdbcType="VARCHAR" />
+    <result column="compare_Oper" property="compare_Oper" jdbcType="INTEGER" />
+    <result column="alarm_Threshold" property="alarm_Threshold" jdbcType="DOUBLE" />
+    <result column="alarm_Condition" property="alarm_Condition" jdbcType="VARCHAR" />
+    <result column="reason" property="reason" jdbcType="VARCHAR" />
+    <result column="deal_Status" property="deal_Status" jdbcType="INTEGER" />
+    <result column="alarm_Status" property="alarm_Status" jdbcType="INTEGER" />
+    <result column="START_TIME" property="last_State_Change" jdbcType="TIMESTAMP" />
+    <result column="END_TIME" property="last_Update" jdbcType="TIMESTAMP" />
+    <result column="error_Nums" property="error_Nums" jdbcType="INTEGER" />
+    <result column="send_SMS_Nums" property="send_SMS_Nums" jdbcType="INTEGER" />
+    <result column="send_Mail_Nums" property="send_Mail_Nums" jdbcType="INTEGER" />
+    <result column="notice_Id" property="notice_Id" jdbcType="INTEGER" />
+  </resultMap>
+  <resultMap id="IndexAlarmResultMap" type="richinfo.mm.monitor.web.enties.AlarmResult" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="id" property="id" jdbcType="INTEGER" />
+    <result column="alarm_Status" property="alarm_Status" jdbcType="INTEGER" />
+    <result column="error_Nums" property="error_Nums" jdbcType="INTEGER" />
+    <result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id
+  </sql>
+    
+   <select id="selectAlarmResultListPage" resultMap="BaseResultMap" >
+   		select ar.ID,pc.`NAME` as 'PCNAME',pc.URL_PATTERN,it.`NAME` as 'ITNAME',ar.COMPARE_OPER,ar.ALARM_THRESHOLD,
+			   ar.REASON,ar.DEAL_STATUS,ar.ALARM_STATUS,ar.LAST_STATE_CHANGE,ar.LAST_UPDATE,
+               ar.ERROR_NUMS,ar.SEND_SMS_NUMS,ar.SEND_MAIL_NUMS,s.ALARM_CONDITION,
+               ar.page_Conf_Id,ar.index_Id,ar.ignore_Time,ar.pause_Time,ar.notice_Id
+          from alarm_result ar JOIN page_conf pc on ar.PAGE_CONF_ID=pc.ID
+          JOIN index_type it on ar.INDEX_ID=it.ID
+		  JOIN alarm_strategy s on ar.STRATEGY_ID=s.ID
+		  where ar.alarm_Status&gt;0 
+	    <if test="alarmResult.alarm_Status != null and alarmResult.alarm_Status &gt; 0"> and ar.alarm_Status = #{alarmResult.alarm_Status}</if>
+	    ORDER BY ar.alarm_Status desc,ar.LAST_UPDATE DESC,ar.ID desc
+   </select>  
+   <select id="selectAlarmResultById" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+   		select ar.ID,ar.deal_Status,ar.page_Conf_Id,ar.index_Id,ar.ignore_Time,ar.pause_Time
+          from alarm_result ar 
+	    WHERE ar.id=#{id,jdbcType=INTEGER}
+   </select>  
+   <select id="getAlarmResultCount"  parameterType="richinfo.mm.monitor.web.enties.AlarmResult" resultType="java.lang.Integer">
+        select count(1) from alarm_result where alarm_Status&gt;0
+	        <if test="alarm_Status != null">  
+	            and alarm_Status = #{alarm_Status}  
+	        </if>  
+   </select> 
+   <update id="updateAlarmResult" parameterType="java.util.HashMap" >
+        UPDATE ${i_EntityName} SET DEAL_STATUS = #{i_Deal_Status},PAUSE_TIME= #{i_Pause_Time}
+         where id = #{i_id}
+   </update> 
+  <insert id="insertAlarmHistory" keyProperty="id" useGeneratedKeys="true" parameterType="java.util.HashMap">
+    INSERT INTO alarm_history(ALAM_CONF_ID,PAGE_CONF_ID,INDEX_ID,REASON,DEAL_STATUS,
+    	ALARM_STATUS,ALARM_NUMS,FLAP_NUMS,SEND_MAIL_NUMS,SEND_SMS_NUMS,
+    	STRATEGY_ID,NOTICE_ID,COMPARE_OPER,ALARM_THRESHOLD,ERROR_NUMS,
+    	START_POS,END_POS,START_TIME,END_TIME,FAULT_ID,
+    	CREATETIME,OUTPUT,ALAM_RES_ID,DETAILS_SQL
+    	)
+		select ALAM_CONF_ID,PAGE_CONF_ID,INDEX_ID,REASON,1,
+		ALARM_STATUS,ALARM_NUMS,FLAP_NUMS,SEND_MAIL_NUMS,SEND_SMS_NUMS,
+		STRATEGY_ID,NOTICE_ID,COMPARE_OPER,ALARM_THRESHOLD,ERROR_NUMS,
+		START_POS,END_POS,last_state_change,last_update,FAULT_ID,
+		NOW(),OUTPUT,ID,DETAILS_SQL from alarm_result where id=#{i_id}
+  </insert>
+  <delete id="deleteAlarmResult" parameterType="java.util.HashMap">
+    delete from alarm_result
+    where id = #{i_id}
+  </delete>
+  
+  
+  <resultMap id="NoticeResultMap" type="richinfo.mm.monitor.web.enties.AlarmNoticeRecords" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="notice_Id" property="notice_Id" jdbcType="INTEGER" />
+    <result column="send_Time" property="send_Time" jdbcType="TIMESTAMP" />
+    <result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="send_Type" property="send_Type" jdbcType="INTEGER" />
+  </resultMap>    
+   <select id="selectEmailNotice" parameterType="java.util.HashMap" resultMap="NoticeResultMap" >
+   		select anr.ID,anr.SEND_TIME,anr.NOTICE_ID,anr.SEND_TYPE from ${i_EntityName} ar JOIN alarm_notice_records anr ON ar.ID=anr.ALAM_RES_ID 
+         WHERE ar.id=#{i_id} and anr.SEND_TYPE=1 ORDER BY anr.SEND_TIME LIMIT 0,10
+   </select>     
+   <select id="selectSMSNotice" parameterType="java.util.HashMap" resultMap="NoticeResultMap" >
+   		select anr.ID,anr.SEND_TIME,anr.NOTICE_ID,anr.SEND_TYPE from ${i_EntityName} ar JOIN alarm_notice_records anr ON ar.ID=anr.ALAM_RES_ID 
+         WHERE ar.id=#{i_id} and anr.SEND_TYPE=2 ORDER BY anr.SEND_TIME LIMIT 0,10
+   </select>  
+   
+   
+  <resultMap id="RemarkResultMap" type="richinfo.mm.monitor.web.enties.AlarmRemark" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result column="user_Id" property="user_Id" jdbcType="INTEGER" />
+    <result column="user_Name" property="user_Name" jdbcType="VARCHAR" />
+    <result column="alarm_Result_Id" property="alarm_Result_Id" jdbcType="INTEGER" />
+    <result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+    <result column="operType" property="operType" jdbcType="INTEGER" />
+  </resultMap>  
+   <select id="selectAlarmRemark" parameterType="java.util.HashMap" resultMap="RemarkResultMap" >
+   		select r.content,r.user_id,u.`NAME` as user_name,r.createtime,r.operType from ${i_EntityName} ar JOIN alarm_remark r on ar.ID=r.alarm_result_id JOIN `user` u ON r.user_id=u.ID 
+        <trim prefix="where" prefixOverrides="and |or">  
+	        <if test="i_id != null">  
+	            ar.id=#{i_id}  
+	        </if>    
+	        <if test="i_OperType != null">  
+	            and r.operType=#{i_OperType} 
+	        </if> 
+	    </trim>
+	    <if test="i_EntityName!='alarm_history'">
+         and r.createtime&gt;=ar.LAST_STATE_CHANGE ORDER BY r.createtime desc</if>
+	    <if test="i_EntityName=='alarm_history'">
+         and r.createtime&gt;=ar.START_TIME ORDER BY r.createtime desc</if>
+         <!--  and r.createtime&lt;=ar.LAST_UPDATE -->
+   </select>  
+  <insert id="insertAlarmRemark" keyProperty="id" useGeneratedKeys="true" parameterType="richinfo.mm.monitor.web.enties.AlarmRemark">
+    INSERT INTO alarm_remark(content,user_id,alarm_result_id,createtime,operType)
+		values(#{content},#{user_Id},#{alarm_Result_Id},NOW(),#{operType})
+  </insert>  
+  
+    
+   <select id="selectAlarmHistoryListPage" resultMap="AlarmHistoryMap" >
+   		
+   		select ar.ID,pc.`NAME` as 'PCNAME',pc.URL_PATTERN,it.`NAME` as 'ITNAME',ar.COMPARE_OPER,ar.ALARM_THRESHOLD,
+			   ar.REASON,ar.DEAL_STATUS,ar.ALARM_STATUS,ar.START_TIME,ar.END_TIME,
+               ar.ERROR_NUMS,ar.SEND_SMS_NUMS,ar.SEND_MAIL_NUMS,s.ALARM_CONDITION,ar.notice_Id
+          from alarm_history ar JOIN page_conf pc on ar.PAGE_CONF_ID=pc.ID
+          JOIN index_type it on ar.INDEX_ID=it.ID
+		  JOIN alarm_strategy s on ar.STRATEGY_ID=s.ID
+		  where ar.alarm_Status&gt;0
+	    <if test="alarmHistory.alarm_Status != null and alarmHistory.alarm_Status &gt;= 0">
+	       and ar.alarm_Status = #{alarmHistory.alarm_Status}
+	    </if>
+	    <if test="alarmHistory.deal_Status != null and alarmHistory.deal_Status &gt;= 0">
+	       and ar.deal_Status = #{alarmHistory.deal_Status}
+	    </if>
+	    <if test="sWhere != null and sWhere1=''">
+	       ${sWhere}  
+	    </if>
+	    <if test="alarmHistory.SearchStartDate != null">
+	       and ar.CREATETIME &gt;= #{alarmHistory.SearchStartDate}
+	    </if>
+	    <if test="alarmHistory.SearchEndDate != null">
+	       and ar.CREATETIME &lt; date_add(#{alarmHistory.SearchEndDate}, interval 1 day) 
+	    </if>
+	    <if test="alarmHistory.businessid &gt; 0">  
+           and pc.BUSINESS_ID = #{alarmHistory.businessid}  
+        </if>  
+	    <if test="alarmHistory.pcName != null and alarmHistory.pcName!=''">  
+          <![CDATA[ and pc.`NAME` REGEXP #{alarmHistory.pcName}   ]]> 
+        </if>  
+	    ORDER BY ar.alarm_Status desc,ar.END_TIME DESC,ar.ID desc
+	    
+   </select> 
+   <select id="selectIndexAlarmResult" resultMap="IndexAlarmResultMap"  parameterType="java.util.HashMap">
+	   <![CDATA[
+				select id,alarm_status, count(1) as error_Nums,createtime from alarm_result where 
+						unix_timestamp(createtime) >= #{starttime} and unix_timestamp(createtime) < #{endtime} 
+				group by alarm_status
+		]]>
+   </select>  
+</mapper>

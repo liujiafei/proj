@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="richinfo.mm.monitor.web.dao.PermissionMapper">
+	<resultMap id="BaseResultMap" type="richinfo.mm.monitor.web.enties.Permission">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="menu" property="menu" jdbcType="VARCHAR" />
+		<result column="parent" property="parent" jdbcType="INTEGER" />
+		<result column="layer" property="layer" jdbcType="INTEGER" />
+		<result column="ord" property="ord" jdbcType="INTEGER" />
+		<result column="target" property="target" jdbcType="BIT" />
+		<result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+		<result column="codeName" property="codeName" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, url, menu, parent, layer, ord, target,
+		createtime,codeName
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Integer">
+		select
+		<include refid="Base_Column_List" />
+		from permission
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+
+	<select id="loadPermissionByRole" resultMap="BaseResultMap"
+		parameterType="java.lang.Integer">
+		select
+		<include refid="Base_Column_List" />
+		from permission
+		where id in (select pid from role_permission where rid
+		=
+		#{rid,jdbcType=INTEGER} ) order by layer,ord
+	</select>
+
+	<select id="loadPermission" resultMap="BaseResultMap"
+		parameterType="richinfo.mm.monitor.web.enties.Permission">
+		select
+		<include refid="Base_Column_List" />
+		from permission
+		<where>
+			<if test="id != null">
+				id = #{id,jdbcType=INTEGER}
+			</if>
+			<if test="url != null">
+				and url = #{url jdbcType=VARCHAR}
+			</if>
+			<if test="menu != null">
+				and menu = #{menu}
+			</if>
+			<if test="parent != null">
+				and parent = ${parnet}
+			</if>
+			<if test="layer != null">
+				layer = #{layer}
+			</if>
+
+			<if test="target != null">
+				target=#{target}
+			</if>
+
+		</where>
+		
+		order by layer,ord
+		
+	</select>
+
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from
+		permission
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+	
+	
+	<delete id="deleteByRelation" parameterType="java.lang.Integer">
+		delete from
+		role_permission
+		where pid = #{id,jdbcType=INTEGER}
+	</delete>
+	
+	
+
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="richinfo.mm.monitor.web.enties.Permission">
+		
+		insert into permission (url, menu,
+		parent, layer, ord,
+		target,
+		createtime,codeName)
+		values ( #{url,jdbcType=VARCHAR},
+		#{menu,jdbcType=VARCHAR},
+		#{parent,jdbcType=INTEGER},
+		#{layer,jdbcType=INTEGER}, #{ord,jdbcType=INTEGER},
+		#{target,jdbcType=BIT},now(), #{codeName,jdbcType=VARCHAR})
+	
+	</insert>
+
+	<insert id="insertRolePermission" parameterType="java.util.Map">
+
+		insert into
+		role_permission (rid, pid)
+		values
+		(#{rid,jdbcType=INTEGER},#{pid,jdbcType=INTEGER})
+	</insert>
+
+
+	<insert id="insertSelective" parameterType="richinfo.mm.monitor.web.enties.Permission">
+		insert into permission
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="url != null">
+				url,
+			</if>
+			<if test="menu != null">
+				menu,
+			</if>
+			<if test="parent != null">
+				parent,
+			</if>
+			<if test="layer != null">
+				layer,
+			</if>
+			<if test="ord != null">
+				ord,
+			</if>
+			<if test="target != null">
+				target,
+			</if>
+			<if test="createtime != null">
+				createtime,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="url != null">
+				#{url,jdbcType=VARCHAR},
+			</if>
+			<if test="menu != null">
+				#{menu,jdbcType=VARCHAR},
+			</if>
+			<if test="parent != null">
+				#{parent,jdbcType=INTEGER},
+			</if>
+			<if test="layer != null">
+				#{layer,jdbcType=INTEGER},
+			</if>
+			<if test="ord != null">
+				#{ord,jdbcType=INTEGER},
+			</if>
+			<if test="target != null">
+				#{target,jdbcType=BIT},
+			</if>
+			<if test="createtime != null">
+				#{createtime,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="richinfo.mm.monitor.web.enties.Permission">
+		update permission 
+		<set>
+			<if test="url != null">
+				url = #{url,jdbcType=VARCHAR},
+			</if>
+			<if test="menu != null">
+				menu = #{menu,jdbcType=VARCHAR},
+			</if>
+			<if test="parent != null">
+				parent = #{parent,jdbcType=INTEGER},
+			</if>
+			<if test="layer != null">
+				layer = #{layer,jdbcType=INTEGER},
+			</if>
+			<if test="ord != null">
+				ord = #{ord,jdbcType=INTEGER},
+			</if>
+			<if test="target != null">
+				target = #{target,jdbcType=BIT},
+			</if>
+			<if test="codeName != null">
+				codeName = #{codeName,jdbcType=VARCHAR},
+			</if>
+			createtime = now()
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="richinfo.mm.monitor.web.enties.Permission">
+		update permission
+		set url = #{url,jdbcType=VARCHAR},
+		menu = #{menu,jdbcType=VARCHAR},
+		parent = #{parent,jdbcType=INTEGER},
+		layer = #{layer,jdbcType=INTEGER},
+		ord = #{ord,jdbcType=INTEGER},
+		target = #{target,jdbcType=BIT},
+		createtime = now(),
+		codeName = #{codeName,jdbcType=VARCHAR}
+		where id =
+		#{id,jdbcType=INTEGER}
+	</update>
+</mapper>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="richinfo.mm.monitor.web.dao.PageConfMapper">
+	<resultMap id="BaseResultMap" type="richinfo.mm.monitor.web.enties.PageConf">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="url_pattern" property="url_pattern" jdbcType="VARCHAR" />
+		<result column="business_id" property="business_id" jdbcType="INTEGER" />
+		<!-- <result column="match_method" property="match_method" jdbcType="INTEGER" />-->
+		<result column="product" property="product" jdbcType="INTEGER" />
+		<result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+		<result column="lastmodifiedtime" property="lastmodifiedtime" jdbcType="TIMESTAMP" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+	</resultMap>
+	<resultMap id="statuscountmap" type="richinfo.mm.monitor.web.enties.PageConf">
+		<id column="scount" property="count" jdbcType="INTEGER" />		
+	</resultMap>
+	<select id="getListPage" resultMap="BaseResultMap" parameterType="richinfo.mm.monitor.web.enties.PageConf">
+		select
+		id as id,
+		name as name,
+		business_id as business_id,
+		match_method as match_method,
+		url_pattern as url_pattern,
+		product as product,
+		status as status,
+		createtime as createtime,
+		lastmodifiedtime as lastmodifiedtime
+		from page_conf
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+		    <!-- 注意，test中的字段应该与#{}里面的值是一样的 -->
+			<if test=" pageConf.product != null">
+				product = #{pageConf.product}
+			</if>
+			<if test=" pageConf.name != null">
+				AND name like CONCAT('%',#{pageConf.name},'%')  
+			</if>
+			<if test=" pageConf.url_pattern != null">
+				AND url_pattern like CONCAT('%',#{pageConf.url_pattern},'%')  
+			</if>
+			<if test=" pageConf.business_id != null">
+				AND business_id = #{pageConf.business_id}
+			</if>
+			<if test=" pageConf.status != null">
+				AND status = #{pageConf.status}
+			</if>
+			<if test=" startTime != null">
+				AND lastmodifiedtime &gt;= #{startTime}
+			</if>
+			<if test=" endTime != null">
+			    AND lastmodifiedtime &lt;= #{endTime}
+			</if>
+	    </trim>
+		ORDER BY lastmodifiedtime DESC
+	</select>
+	<select id="getPageConfById" resultMap="BaseResultMap"
+		parameterType="java.util.HashMap">
+		select
+		id as id,
+		name as name,
+		business_id as business_id,
+		match_method as match_method,
+		url_pattern as url_pattern,
+		product as product,
+		status as status,
+		createtime as createtime,
+		lastmodifiedtime as lastmodifiedtime
+		from page_conf
+		where id = #{id}
+	</select>
+	<select id="getPageConfByEntity" resultMap="BaseResultMap" parameterType="java.util.HashMap">
+		select
+		id as id,
+		name as name,
+		business_id as business_id,
+		match_method as match_method,
+		url_pattern as url_pattern,
+		product as product,
+		status as status,
+		createtime as createtime,
+		lastmodifiedtime as lastmodifiedtime
+		from page_conf
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test=" product != null">
+				product = #{product}
+			</if>
+			<if test=" name != null">
+				AND name = #{name}
+			</if>
+			<if test=" url_pattern != null">
+				AND url_pattern = #{url_pattern}
+			</if>
+			<if test=" business_id != null">
+				AND business_id = #{business_id}
+			</if>
+			<if test=" status != null">
+				AND status = #{status}
+			</if>
+			<if test=" lastmodifiedtime != null">
+				AND lastmodifiedtime = #{lastmodifiedtime}
+			</if>
+			<if test=" createtime != null">
+			    AND createtime = #{createtime}
+			</if>
+	    </trim>
+	</select>
+	<insert id="insertPageConf" keyProperty="id" useGeneratedKeys="true"
+		parameterType="richinfo.mm.monitor.web.enties.PageConf">
+		INSERT INTO page_conf
+		(id,business_id,name,url_pattern,match_method,product,createtime,
+		lastmodifiedtime,status)
+		VALUES
+		(#{id},#{business_id},#{name},#{url_pattern},#{match_method},#{product},NOW(),
+		NOW(),#{status})
+	</insert>
+	<update id="updateByEntity" parameterType="richinfo.mm.monitor.web.enties.PageConf">
+		UPDATE page_conf
+		<set>
+			<if test="name != null">
+				name = #{name},
+			</if>
+			<if test="business_id != null">
+				business_id = #{business_id},
+			</if>
+			<if test="url_pattern != null">
+				url_pattern = #{url_pattern},
+			</if>
+			<if test="match_method != null">
+				match_method = #{match_method},
+			</if>
+			<if test="product != null">
+				product = #{product},
+			</if>
+			<if test="1 == 1">
+				lastmodifiedtime = NOW(),
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+	<delete id="deleteById" parameterType="java.util.HashMap">
+    delete from page_conf
+    where id = #{id}
+  	</delete>
+  	
+  	<select id="getStatusCount"  resultMap="statuscountmap"  parameterType="java.util.HashMap">
+    	select count(1) as scount from page_conf where status = #{status};    
+  	</select>
+</mapper>

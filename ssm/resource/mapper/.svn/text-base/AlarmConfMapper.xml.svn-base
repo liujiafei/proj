@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="richinfo.mm.monitor.web.dao.AlarmConfMapper" >
+  <resultMap id="BaseResultMap" type="richinfo.mm.monitor.web.enties.AlarmConf" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="PAGE_CONF_ID" property="pageConfId" jdbcType="INTEGER" />
+    <result column="NOTICE_ID" property="noticeId" jdbcType="INTEGER" />
+    <result column="SCOPE" property="scope" jdbcType="TINYINT" />
+    <result column="ENABLE" property="enable" jdbcType="TINYINT" />
+    <result column="CREATETIME" property="createtime" jdbcType="TIMESTAMP" />
+    <result column="LASTMODIFIEDTIME" property="lastmodifiedtime" jdbcType="TIMESTAMP" />
+    <result column="DESCP" property="descp" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  
+  <resultMap id="SBaseResultMap" type="richinfo.mm.monitor.web.enties.AlarmStrategy" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="INDEX_ID" property="indexId" jdbcType="INTEGER" />
+    <result column="ALAM_CONF_ID" property="alamConfId" jdbcType="INTEGER" />
+    <result column="COMPARE_OPER" property="compareOper" jdbcType="INTEGER" />
+    <result column="THRESHOLD" property="threshold" jdbcType="DECIMAL" />
+    <result column="ALARM_LEVEL" property="alarmLevel" jdbcType="SMALLINT" />
+    <result column="GROUP_ID" property="groupId" jdbcType="SMALLINT" />
+    <result column="CREATETIME" property="createtime" jdbcType="TIMESTAMP" />
+    <result column="LASTMODIFIEDTIME" property="lastmodifiedtime" jdbcType="TIMESTAMP" />
+    <result column="ALARM_CONDITION" property="alarmCondition" jdbcType="VARCHAR" />
+    <result column="DESCP" property="descp" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  
+   <resultMap id="NBaseResultMap" type="richinfo.mm.monitor.web.enties.NoticeConf" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="NTYPE" property="ntype" jdbcType="SMALLINT" />
+    <result column="ALARM_INTERVAL" property="alarmInterval" jdbcType="INTEGER" />
+    <result column="ALARM_MAIL_SET" property="alarmMailSet" jdbcType="INTEGER" />
+    <result column="ALARM_SMS_SET" property="alarmSmsSet" jdbcType="INTEGER" />
+    <result column="FLAPPING" property="flapping" jdbcType="DECIMAL" />
+    <result column="WORKDAY_BEGTIME" property="workdayBegtime" jdbcType="INTEGER" />
+    <result column="WORKDAY_ENDTIME" property="workdayEndtime" jdbcType="INTEGER" />
+    <result column="WEEKEND_BEGTIME" property="weekendBegtime" jdbcType="INTEGER" />
+    <result column="WEEKEND_ENDTIME" property="weekendEndtime" jdbcType="INTEGER" />
+    <result column="CREATETIME" property="createtime" jdbcType="TIMESTAMP" />
+    <result column="LASTMODIFIEDTIME" property="lastmodifiedtime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  
+   <resultMap id="UBaseResultMap" type="richinfo.mm.monitor.web.enties.User" >
+    <id column="u.id" property="id" jdbcType="INTEGER" />
+    <result column="u.name" property="name" jdbcType="VARCHAR" />
+    <result column="u.account" property="account" jdbcType="VARCHAR" />
+    <result column="u.email" property="email" jdbcType="VARCHAR" />
+    <result column="u.phone" property="phone" jdbcType="VARCHAR" />
+    <result column="r.descp" property="descp" jdbcType="VARCHAR" />
+    <result column="rid" property="rid" jdbcType="INTEGER" />
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    ID, PAGE_CONF_ID, NOTICE_ID, SCOPE, ENABLE, CREATETIME, LASTMODIFIEDTIME, DESCP
+  </sql>
+  
+  <sql id="Base_Column_s_List" >
+    ID, INDEX_ID, ALAM_CONF_ID, COMPARE_OPER, THRESHOLD, ALARM_LEVEL, GROUP_ID, CREATETIME, 
+    LASTMODIFIEDTIME, ALARM_CONDITION, DESCP
+  </sql>
+  
+  <sql id="Base_Column_n_List" >
+    ID, NTYPE, ALARM_INTERVAL, ALARM_MAIL_SET, ALARM_SMS_SET, FLAPPING, WORKDAY_BEGTIME, 
+    WORKDAY_ENDTIME, WEEKEND_BEGTIME, WEEKEND_ENDTIME, CREATETIME, LASTMODIFIEDTIME
+  </sql>
+  
+  <insert id="insertAlarmConf" parameterType="richinfo.mm.monitor.web.enties.AlarmConf"  keyProperty="id" keyColumn="id" useGeneratedKeys="true">
+    insert into alarm_conf(PAGE_CONF_ID,NOTICE_ID,SCOPE,ENABLE,CREATETIME,DESCP,LASTMODIFIEDTIME)
+    values(#{pageConfId},#{noticeId},#{scope},0,now(),#{descp},now())
+  </insert>
+  
+  <insert id="insertAlarmStrategy" parameterType="richinfo.mm.monitor.web.enties.AlarmStrategy" keyProperty="id" keyColumn="id" useGeneratedKeys="true">
+  	insert into alarm_strategy(INDEX_ID,ALAM_CONF_ID,COMPARE_OPER,THRESHOLD,ALARM_LEVEL,GROUP_ID,CREATETIME,ALARM_CONDITION,DESCP,LASTMODIFIEDTIME,ENABLE)
+  	values(#{indexId},#{alamConfId},#{compareOper},#{threshold},#{alarmLevel},1,now(),#{alarmCondition},#{descp},now(),0)
+  </insert>
+
+  <insert id="insertAlarmNoticeConf" parameterType="richinfo.mm.monitor.web.enties.NoticeConf" keyProperty="id" keyColumn="id" useGeneratedKeys="true">
+  	insert into notice_conf(NTYPE,ALARM_INTERVAL,ALARM_MAIL_SET,ALARM_SMS_SET,FLAPPING,WORKDAY_BEGTIME,
+WORKDAY_ENDTIME,WEEKEND_BEGTIME,WEEKEND_ENDTIME,CREATETIME,LASTMODIFIEDTIME)
+	values(#{ntype},#{alarmInterval},#{alarmMailSet},#{alarmSmsSet},#{flapping},#{workdayBegtime},#{workdayEndtime},#{weekendBegtime},#{weekendEndtime},now(),now())
+  </insert>
+  
+  <insert id="insertAlarmNoticeUser" parameterType="java.util.List"> 
+  	insert into noticeconf_user(NOTICE_ID,USER_ID)  values
+  	<foreach item="item" collection="uids" separator="," >  
+     (#{noticeid},#{item})
+    </foreach> 
+  </insert>
+
+	<update id="updateAlarmConf" parameterType="richinfo.mm.monitor.web.enties.AlarmConf" >
+ 		update alarm_conf set LASTMODIFIEDTIME=now(),DESCP=#{descp} where id=#{id};
+	</update>
+	
+	<update id="updateAlarmStrategy" parameterType="richinfo.mm.monitor.web.enties.AlarmStrategy">
+		update alarm_strategy set THRESHOLD=#{threshold}, LASTMODIFIEDTIME=now(),ALARM_CONDITION=#{alarmCondition},DESCP=#{descp},`ENABLE`=0 where id=#{id}
+	</update>
+
+	<update id="updateAlarmNoticeConf" parameterType="richinfo.mm.monitor.web.enties.NoticeConf">
+		update notice_conf set NTYPE=#{ntype},ALARM_INTERVAL=#{alarmInterval},ALARM_MAIL_SET=#{alarmMailSet},ALARM_SMS_SET=#{alarmSmsSet},
+		FLAPPING=#{flapping},WORKDAY_BEGTIME=#{workdayBegtime},WORKDAY_ENDTIME=#{workdayEndtime},WEEKEND_BEGTIME=#{weekendBegtime},WEEKEND_ENDTIME=#{weekendEndtime},
+		LASTMODIFIEDTIME=now() where id=#{id}
+	</update>
+	
+	<update id="clearNoticeStrategy" parameterType="java.lang.Integer">
+		update alarm_strategy set `ENABLE`=1,LASTMODIFIEDTIME=now() where id=#{strategyId}
+	</update>
+	
+	<delete id="clearNoticeUser" parameterType="java.lang.Integer">
+		delete from noticeconf_user where NOTICE_ID=#{id}
+	</delete>
+	
+
+	
+	<select id="exitsAlarmConf" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select <include refid="Base_Column_List"/> from alarm_conf where PAGE_CONF_ID=#{pageid} and SCOPE=#{scope}
+	</select>
+	
+	<select id="getAlarmConf" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select <include refid="Base_Column_List"/> from alarm_conf where id=#{id}
+	</select>
+	
+	<select id="getStrategyByConfId" parameterType="java.lang.Integer" resultMap="SBaseResultMap">
+		select <include refid="Base_Column_s_List"/> from alarm_strategy where ALAM_CONF_ID=#{id} and `ENABLE`!=1
+	</select>
+	
+	<select id="getStrategyByConfIdAll" parameterType="java.lang.Integer" resultMap="SBaseResultMap">
+		select <include refid="Base_Column_s_List"/> from alarm_strategy where ALAM_CONF_ID=#{id} 
+	</select>
+	
+	<select id="getNoticeConf" parameterType="java.lang.Integer" resultMap="NBaseResultMap">
+		select <include refid="Base_Column_n_List"/> from notice_conf where id =#{id}
+	</select>
+	
+	<select id='getNoticeUser' parameterType="java.lang.Integer" resultMap="UBaseResultMap">
+		select u.id,u.account,u.name,rid,r.descp,u.email,u.phone from user u inner join role r on r.id=u.rid where u.id in (select USER_ID from noticeconf_user where NOTICE_ID = #{id})
+	</select>
+	
+	<select id='getRemenberUser' parameterType="java.util.List" resultMap="UBaseResultMap">
+		select u.id,u.account,u.name,rid,r.descp,u.email,u.phone from user u inner join role r on r.id=u.rid 
+		where u.id in (
+			<foreach collection="uids" item="id" separator=",">
+				#{id}
+			</foreach>
+		)
+	</select>
+	
+	
+	<select id="getPageName" parameterType="java.lang.Integer" resultType="java.lang.String">
+		select name from page_conf where id=#{id};
+	</select>
+	
+</mapper>

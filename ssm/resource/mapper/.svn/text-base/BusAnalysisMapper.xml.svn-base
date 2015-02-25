@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="richinfo.mm.monitor.web.dao.BusAnalysisMapper">
+
+	<resultMap id="PageRealTimeStatResultMap" type="richinfo.mm.monitor.web.enties.PageRealTimeStat">
+		<result column="id" property="id" jdbcType="INTEGER" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="HITS" property="hits" jdbcType="INTEGER" />
+		<result column="respTime" property="respTime" jdbcType="INTEGER" />
+		<result column="createtime" property="createtime" jdbcType="DATE" />
+		<result column="product" property="product" jdbcType="INTEGER" />
+		<result column="business_id" property="business_id" jdbcType="INTEGER" />
+		<result column="node" property="node" jdbcType="INTEGER" />
+		<result column="page_conf_id" property="page_conf_id" jdbcType="INTEGER" />
+	</resultMap>
+	
+	<select id="selectResultListPage" resultMap="PageRealTimeStatResultMap" >
+		select t.PAGE_CONF_ID,c.URL_PATTERN as url,c.name,sum(t.hits) as hits,avg(t.resp_time) as respTime from page_minute_stat t,page_conf c where t.PAGE_CONF_ID=c.id
+		 <![CDATA[
+		and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{pageRealTimeStat.createtime},interval -1 hour)) and unix_timestamp(t.CREATETIME) <= unix_timestamp(#{pageRealTimeStat.createtime})
+		 ]]>
+		 <if test="pageRealTimeStat.product != null and pageRealTimeStat.product != ''">
+			and t.product = #{pageRealTimeStat.product}
+		</if>
+		<if test="pageRealTimeStat.business_id != null and pageRealTimeStat.business_id != ''">
+			and t.business_id = #{pageRealTimeStat.business_id}
+		</if>
+		<if test="pageRealTimeStat.node != null and pageRealTimeStat.node != ''">
+			and t.node = #{pageRealTimeStat.node}
+		</if>
+		<if test="pageRealTimeStat.page_conf_id != null and pageRealTimeStat.page_conf_id != ''">
+			and t.page_conf_id = #{pageRealTimeStat.page_conf_id}
+		</if>
+		group by t.PAGE_CONF_ID,c.URL_PATTERN ,c.name
+		<if test="orderby == 1">
+			order by t.CREATETIME
+		</if>
+		<if test="orderby == 2">
+			order by respTime  desc
+		</if>
+		<if test="orderby == 3">
+			order by respTime asc
+		</if>
+		<if test="orderby == 4">
+			order by hits asc
+		</if>
+		<if test="orderby == 5">
+			order by hits desc
+		</if>
+   </select>  
+	
+	<select id="getDimensionCheckInfo" parameterType="java.util.Map" resultType="java.util.Map" >
+	select 
+	<if test="dimension != null and dimension != ''">
+		<if test="dimension==2">
+			t.ISP id,(case when t.ISP=1 then '电信' when t.ISP=2 then '联通' when t.ISP=3 then '移动' when t.ISP=4 then '教育网' when t.ISP=5 then '铁通' when t.ISP=6 then '网通' else '未知' end) name
+		</if>
+		<if test="dimension==3">
+			t.TERMINAL id,(case when t.TERMINAL=0 then '未知' else t.TERMINAL end) name
+		</if>
+		<if test="dimension==4">
+			t.CITY id,C.CITY name
+		</if>
+		<if test="dimension==5">
+			t.CLIENT_V id,(case when t.CLIENT_V='UNKNOW' then '未知' else t.CLIENT_V end) name
+		</if>
+		<if test="dimension==6">
+			t.AP  id,(case when t.AP='UNKNOW' then '未知' else t.AP end) name
+		</if>
+	</if>
+	 from page_details t
+	  <if test="dimension==4">
+	 	,city_info C 
+	 </if>
+	 <![CDATA[
+	where unix_timestamp(CREATETIME) > unix_timestamp(date_add(#{date},interval -2 hour)) and unix_timestamp(CREATETIME) <= unix_timestamp(#{date}) and PHONE !='UNKNOW'
+	 ]]>
+	 <if test="product != null and product != ''">
+		and t.product = #{product}
+	</if>
+	<if test="business_id != null and business_id != ''">
+		and t.BUSINESS_ID = #{business_id}
+	</if>
+	<if test="node != null and node != ''">
+		and t.node = #{node}
+	</if>
+	<if test="page_conf_id != null and page_conf_id != ''">
+		and t.page_conf_id = #{page_conf_id}
+	</if>
+	<if test="dimension != null and dimension != ''">
+		<if test="dimension==2">
+			and t.ISP is not null
+			group by t.ISP order by t.ISP
+		</if>
+		<if test="dimension==3">
+			and t.TERMINAL is not null
+			group by t.TERMINAL order by t.TERMINAL
+		</if>
+		<if test="dimension==4">
+			and t.CITY is not null and C.CITY_CODE=t.CITY
+			group by t.CITY order by t.CITY
+		</if>
+		<if test="dimension==5">
+			and t.CLIENT_V is not null   and t.CLIENT_V != ''
+			group by t.CLIENT_V order by t.CLIENT_V
+		</if>
+		<if test="dimension==6">
+			and t.AP is not null   and t.AP != ''
+			group by t.AP order by t.AP
+		</if>
+		
+	</if>
+	</select>
+
+	<select id="getRealTimeUserData" parameterType="java.util.Map" resultType="java.util.Map" >
+	
+	select 
+	<![CDATA[
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 0 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -5 minute)) then  PHONE  end)) minute24, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 5 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -10 minute)) then PHONE  end)) minute23, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 10 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -15 minute)) then PHONE  end)) minute22, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 15 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -20 minute)) then PHONE  end)) minute21, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 20 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -25 minute)) then PHONE  end)) minute20, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 25 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -30 minute)) then PHONE  end)) minute19,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 30 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -35 minute)) then PHONE  end)) minute18,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 35 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -40 minute)) then PHONE  end)) minute17, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 40 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -45 minute)) then PHONE  end)) minute16,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 45 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -50 minute)) then PHONE  end)) minute15, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 50 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -55 minute)) then PHONE  end)) minute14,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 55 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -60 minute)) then PHONE  end)) minute13,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 60 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -65 minute)) then PHONE  end)) minute12,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 65 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -70 minute)) then PHONE  end)) minute11, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 70 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -75 minute)) then PHONE  end)) minute10,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 75 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -80 minute)) then PHONE  end)) minute9, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 80 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -85 minute)) then PHONE  end)) minute8,
+	 count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 85 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -90 minute)) then PHONE  end)) minute7, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 90 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -95 minute)) then PHONE  end)) minute6, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 95 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -100 minute)) then PHONE  end)) minute5, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 100 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -105 minute)) then PHONE  end)) minute4, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 105 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -110 minute)) then PHONE  end)) minute3, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 110 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -115 minute)) then PHONE  end)) minute2, 
+	count(distinct(case when unix_timestamp(t.CREATETIME)<=unix_timestamp(date_add(#{date},interval - 115 minute))  and unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -120 minute)) then PHONE  end)) minute1
+	]]>
+	<if test="dimension != null and dimension != ''">
+		<if test="dimension==2">
+			,t.ISP DIMENSIONN,(case when t.ISP=1 then '电信' when t.ISP=2 then '联通' when t.ISP=3 then '移动' when t.ISP=4 then '教育网' when t.ISP=5 then '铁通' when t.ISP=6 then '网通' else '未知' end) DIMENSIONNAME
+		</if>
+		<if test="dimension==3">
+			, t.TERMINAL DIMENSION,(case when t.TERMINAL=0 then '未知' else t.TERMINAL end) DIMENSIONNAME
+		</if>
+		<if test="dimension==4">
+			, t.CITY DIMENSION,C.CITY DIMENSIONNAME
+		</if>
+		<if test="dimension==5">
+			, t.CLIENT_V DIMENSION,(case when t.CLIENT_V='UNKNOW' then '未知' else t.CLIENT_V end) DIMENSIONNAME
+		</if>
+		<if test="dimension==6">
+			, t.AP  DIMENSION, (case when t.AP='UNKNOW' then '未知' else t.AP end) DIMENSIONNAME
+		</if>
+		
+	</if>
+	 from page_details t
+	 <if test="dimension==4">
+	 	,city_info C 
+	 </if>
+	 <![CDATA[
+	where unix_timestamp(t.CREATETIME) > unix_timestamp(date_add(#{date},interval -2 hour)) and unix_timestamp(t.CREATETIME) <= unix_timestamp(#{date}) and PHONE !='UNKNOW'
+	 ]]>
+	 <if test="product != null and product != ''">
+		and t.product = #{product}
+	</if>
+	<if test="business_id != null and business_id != ''">
+		and t.BUSINESS_ID = #{business_id}
+	</if>
+	<if test="node != null and node != ''">
+		and t.node = #{node}
+	</if>
+	<if test="page_conf_id != null and page_conf_id != ''">
+		and t.page_conf_id = #{page_conf_id}
+	</if>
+	<if test="dimension != null and dimension != ''">
+		<if test="dimension==2">
+			and t.ISP is not null
+			<if test="checkedValArr != null">
+			and t.ISP in
+				<foreach collection="checkedValArr" item="checkedItem" index="index" open="(" close=")" separator=",">
+					#{checkedItem}
+				</foreach>
+			</if>
+			group by t.ISP order by t.ISP
+		</if>
+		<if test="dimension==3">
+			and t.TERMINAL is not null and t.TERMINAL != ''
+			<if test="checkedValArr != null">
+			and t.TERMINAL in
+				<foreach collection="checkedValArr" item="checkedItem" index="index" open="(" close=")" separator=",">
+					#{checkedItem}
+				</foreach>
+			</if>
+			group by t.TERMINAL order by t.TERMINAL
+		</if>
+		<if test="dimension==4">
+			<if test="checkedValArr != null">
+			and t.CITY in
+				<foreach collection="checkedValArr" item="checkedItem" index="index" open="(" close=")" separator=",">
+					#{checkedItem}
+				</foreach>
+			</if>
+			and t.CITY is not null and C.CITY_CODE=t.CITY
+			group by t.CITY order by t.CITY
+		</if>
+		<if test="dimension==5">
+			and t.CLIENT_V is not null and t.CLIENT_V != ''
+			<if test="checkedValArr != null">
+			and t.CLIENT_V in
+				<foreach collection="checkedValArr" item="checkedItem" index="index" open="(" close=")" separator=",">
+					#{checkedItem}
+				</foreach>
+			</if>
+			group by t.CLIENT_V order by t.CLIENT_V
+		</if>
+		<if test="dimension==6">
+			and t.AP is not null  and t.AP != ''
+			<if test="checkedValArr != null">
+			and t.AP in
+				<foreach collection="checkedValArr" item="checkedItem" index="index" open="(" close=")" separator=",">
+					#{checkedItem}
+				</foreach>
+			</if>
+			group by t.AP order by t.AP
+		</if>
+		
+	</if>
+	</select>
+</mapper>
