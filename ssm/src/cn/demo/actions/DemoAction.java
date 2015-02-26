@@ -37,7 +37,7 @@ public class DemoAction {
 	}
 
 	/* 
-	 * 用户行为轨迹 
+	 * 用户行为轨迹 sss
 	 */
 	@RequestMapping("/locus")
 	public String locus() {
