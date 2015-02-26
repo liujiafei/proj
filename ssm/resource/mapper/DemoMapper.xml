@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.demo.daos.DemoMapper">
+
+	<!-- 用户行为轨迹开始 -->
+  <resultMap id="bhResultMap" type="cn.demo.enties.Demo" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="src_ip" property="src_ip" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="imsi" property="imsi" jdbcType="VARCHAR" />
+    <result column="resp_time" property="resp_time" jdbcType="INTEGER" />
+    <result column="http_status" property="http_status" jdbcType="VARCHAR" />
+    <result column="visit_start_time" property="visit_start_time" jdbcType="TIMESTAMP" />
+  </resultMap>
+
+	<select id="getListPage" parameterType="cn.demo.enties.Demo" resultMap="bhResultMap">
+	select pd.id,pd.phone,pd.src_ip,pc.name,pd.url,pd.imsi,pd.resp_time,pd.http_status,pd.visit_start_time from page_details pd,page_conf pc 
+		<where>
+		  pd.page_conf_id=pc.id	
+		    <if test="bh.phone!=null">
+				and pd.phone like CONCAT('%',#{bh.phone},'%')  
+			</if>
+			<if test="bh.src_ip!=null">
+				and pd.src_ip = #{bh.src_ip}  
+			</if>
+			<if test="bh.imsi!=null">
+				and pd.imsi like CONCAT('%',#{bh.imsi},'%')  
+			</if>
+			<if test="bh.startTime!=null and bh.startTime!=''">
+	   			<!-- and pd.visit_start_time  &gt;= #{bh.visit_start_time} -->
+	   			and pd.visit_start_time  >= str_to_date(#{bh.startTime}, '%Y-%m-%d %H:%i:%s')
+	   		</if>
+	   		<if test="bh.endTime!=null and bh.endTime!=''">
+	   			and str_to_date(#{bh.endTime}, '%Y-%m-%d %H:%i:%s')  >= pd.visit_start_time
+	   		</if>
+		</where>
+				order by pd.visit_start_time desc
+	</select>
+	
+  <resultMap id="usrBehaviorMap" type="cn.demo.enties.Demo" >
+    <id column="ID" property="id" jdbcType="INTEGER" />
+    <result column="phone" property="phone" jdbcType="VARCHAR" />
+    <result column="src_ip" property="src_ip" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="imsi" property="imsi" jdbcType="VARCHAR" />
+    <result column="resp_time" property="resp_time" jdbcType="INTEGER" />
+    <result column="http_status" property="http_status" jdbcType="VARCHAR" />
+    <result column="visit_start_time" property="visit_start_time" jdbcType="TIMESTAMP" />
+    
+    <result column="province" property="province" jdbcType="VARCHAR" />
+    <result column="city" property="city" jdbcType="VARCHAR" />
+    <result column="isp" property="isp" jdbcType="VARCHAR" />
+    <result column="sessionid" property="sessionid" jdbcType="VARCHAR" />
+    <result column="server_time" property="server_time" jdbcType="INTEGER" />
+    <result column="net_time" property="net_time" jdbcType="INTEGER" />
+    <result column="browser_v" property="browser_v" jdbcType="VARCHAR" />
+    <result column="ops" property="ops" jdbcType="VARCHAR" />
+    
+    <result column="terminal" property="terminal" jdbcType="VARCHAR" />
+    <result column="client_v" property="client_v" jdbcType="VARCHAR" />
+    <result column="content_encoding" property="content_encoding" jdbcType="VARCHAR" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="cache_filename" property="cache_filename" jdbcType="VARCHAR" />
+  </resultMap>
+  
+	
+	<select id="detail" parameterType="INTEGER" resultMap="usrBehaviorMap">
+		select pd.id,pd.phone,pd.src_ip,pc.name,pd.url,pd.imsi,pd.resp_time,pd.http_status,pd.visit_start_time,
+		ci.province,ci.city,pd.isp,pd.sessionid,pd.server_time,pd.net_time,pd.browser_v,pd.ops,pd.terminal,pd.client_v,
+		pd.content_encoding,pd.username,pd.cache_filename from page_details pd,page_conf pc,city_info ci 
+		<where>
+		  and pd.page_conf_id=pc.id	and pd.id= #{id} and pd.province=ci.prov_code and pd.city=ci.city_code
+		</where>
+	</select>
+	
+	<select id="export" resultMap="usrBehaviorMap">
+		select pd.id,pd.phone,pd.src_ip,pc.name,pd.url,pd.imsi,pd.resp_time,pd.http_status,pd.visit_start_time,
+		pd.province,pd.city,pd.isp,pd.sessionid,pd.server_time,pd.net_time,pd.browser_v,pd.ops,pd.terminal,pd.client_v,
+		pd.content_encoding,pd.username,pd.cache_filename from page_details pd,page_conf pc 
+		<where>
+		  and pd.page_conf_id=pc.id	
+		</where>
+		order by pd.visit_start_time desc
+	</select>
+	<!-- 用户行为轨迹结束 -->
+	
+</mapper>
