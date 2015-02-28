@@ -7,6 +7,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-this is the index page! zhaozhiwen
+this is the index page!
 </body>
 </html>
